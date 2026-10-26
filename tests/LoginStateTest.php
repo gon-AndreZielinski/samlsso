@@ -649,7 +649,7 @@ namespace GlpiPlugin\Samlsso\Tests {
             $loginState3 = new LoginState();
             $loginState3->setRedirect();
 
-            $_SERVER['REQUEST_URI'] = '/var/lib/glpi/plugins/news/js/news.js?v=f22165add49ef7b74dc816f0f9b88d54fe8753f8';
+            $_SERVER['REQUEST_URI'] = '/var/lib/glpi/plugins/news/js/news.js?v=f22165add49ef7b74dc816f0f9b88d5';
             $loginState3->setRedirect();
             $_GET[LoginState::REDIRECT] = '%2Fplugins%2Fnews%2Fjs%2Fnews.js%3Fv%3D1';
             $loginState3->setRedirect();
@@ -687,7 +687,9 @@ namespace GlpiPlugin\Samlsso\Tests {
                 }
             }
 
-            // A previously stored asset redirect must not be returned by getSafeRedirect.
+            /**
+             * A previously stored asset redirect must not be returned by getSafeRedirect.
+             */
             global $DB;
             $DB = new MockDB();
             $loginState = new LoginState();
