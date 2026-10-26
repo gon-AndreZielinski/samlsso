@@ -1,4 +1,5 @@
 
+- Bugfix: Corrected the translation of the "INACTIVITY TIMEOUT (MINUTES)" label in de_DE, el_GR, es_AR, es_ES, fi_FI, fr_FR, hi_IN, it_IT, nl_NL, pt_BR and sv_SE. Most of these reused the "REQUEST TIMEOUT (MINUTES)" translation, so both timeout fields on the security tab showed the same label.
 **V1.3.2**
 - Fixed issue https://github.com/DonutsNL/samlsso/issues/173 and https://github.com/DonutsNL/samlsso/issues/171: Resolved SQL syntax error 1064 during table upgrade and plugin activation by converting column definitions in `Migration::addField()` from unsupported 'varchar' to 'string', removing conflicting 'update' => true on boolean/string fields to prevent accidental activation of 'force_authn', and normalizing any null values.
 - Fixed issue https://github.com/DonutsNL/samlsso/issues/171: Resolved false-positive schema validation failure and deactivation in SanityChecker on fresh installation by aligning column names with class constants (`ObservedClaim::SAML_CLAIM` and `Exclude::EXCLUDEPATH`) and making plugin path detection dynamic.
