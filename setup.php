@@ -212,6 +212,17 @@ function plugin_init_samlsso(): void                                            
         // Register CSS file for the plugin
         $PLUGIN_HOOKS['add_css'][PLUGIN_NAME]               = ['css/samlSSO.css'];
 
+        // Register keepalive script so typing (e.g. long ticket answers) counts as
+        // activity for the inactivity timeout. Only needed for authenticated users.
+        $keepaliveInterval = (Session::getLoginUserID() !== false) ? Config::getKeepaliveInterval() : 0;
+        if ($keepaliveInterval > 0) {
+            $PLUGIN_HOOKS['add_javascript'][PLUGIN_NAME]    = ['js/keepalive.js'];
+            $PLUGIN_HOOKS['add_header_tag'][PLUGIN_NAME]    = [[
+                'tag'        => 'meta',
+                'properties' => ['name' => 'samlsso-keepalive-interval', 'content' => (string)$keepaliveInterval],
+            ]];
+        }
+
         // Register and hook the samlRules to Hooks::RULE_MATCHED
         Plugin::registerClass(RuleSamlCollection::class, ['rulecollections_types' => true]);
         $PLUGIN_HOOKS[Hooks::RULE_MATCHED][PLUGIN_NAME]     = 'updateUser';

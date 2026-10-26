@@ -81,6 +81,7 @@ class Config extends ConfigCompat
     private static ?int $isOnlyOneConfigCache = null;
     private static array $configIdByEmailDomainCache = [];
     private static ?int $hideLoginFieldsCache = null;
+    private static ?int $minInactivityTimeoutCache = null;
 
     /**
      * Clear all static request caches (mainly for testing purposes).
@@ -92,6 +93,7 @@ class Config extends ConfigCompat
         self::$isOnlyOneConfigCache = null;
         self::$configIdByEmailDomainCache = [];
         self::$hideLoginFieldsCache = null;
+        self::$minInactivityTimeoutCache = null;
     }
 
     /**
@@ -418,6 +420,57 @@ class Config extends ConfigCompat
         return 0;
     }
 
+
+    /**
+     * Returns the smallest inactivity timeout in minutes of all active,
+     * non-deleted configurations, or 0 if none uses an inactivity timeout.
+     * Used to decide if and how often the keepalive script needs to ping.
+     *
+     * @return  int     Timeout in minutes, 0 if disabled everywhere.
+     * @see             public/js/keepalive.js
+     * @since           1.3.2
+     */
+    public static function getMinInactivityTimeout(): int
+    {
+        if (self::$minInactivityTimeoutCache !== null) {
+            return self::$minInactivityTimeoutCache;
+        }
+        // Get global DB object to query the configTable.
+        global $DB;
+
+        $min = 0;
+        foreach ($DB->request([
+            'SELECT' => ConfigEntity::INACTIVITY_TIMEOUT,
+            'FROM'   => Config::getTable(),
+            'WHERE'  => [
+                ConfigEntity::IS_ACTIVE          => 1,
+                ConfigEntity::IS_DELETED         => 0,
+                ConfigEntity::INACTIVITY_TIMEOUT => ['>', 0],
+            ]
+        ]) as $row) {
+            $timeout = (int)$row[ConfigEntity::INACTIVITY_TIMEOUT];
+            if ($timeout > 0 && ($min === 0 || $timeout < $min)) {
+                $min = $timeout;
+            }
+        }
+        self::$minInactivityTimeoutCache = $min;
+        return self::$minInactivityTimeoutCache;
+    }
+
+    /**
+     * Returns the keepalive ping interval in seconds, or 0 if no keepalive is needed.
+     * Half the smallest inactivity timeout, at most 60 seconds, so a ping always
+     * arrives well before the session would time out (1 minute timeout: 30 seconds).
+     *
+     * @return  int     Interval in seconds, 0 if no inactivity timeout is configured.
+     * @see             public/js/keepalive.js
+     * @since           1.3.2
+     */
+    public static function getKeepaliveInterval(): int
+    {
+        $timeout = self::getMinInactivityTimeout();
+        return ($timeout > 0) ? min(60, $timeout * 30) : 0;
+    }
 
     /**
      * If we have a IDP with a valid email configured, then
